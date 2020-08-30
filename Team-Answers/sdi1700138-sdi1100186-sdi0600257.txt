@@ -1,0 +1,189 @@
+Question 1:
+select count(*) as flights from (
+
+select flights.id as flights_id, count(flights_id) as passengers
+
+from routes
+
+inner join airports on routes.source_id = airports.id
+
+inner join flights on routes.id = flights.routes_id
+
+inner join flights_has_passengers as fhp on fhp.flights_id = flights.id
+
+where airports.city = "Athens"
+
+group by flights_id
+
+having count(flights_id) >= 5 and count(flights_id) <= 7) as child;
+
+Question 2:
+select airplanes.model, airplanes.manufacturer, count(*) as count from airplanes
+inner join airlines_has_airplanes as aha on aha.airplanes_id = airplanes.id
+inner join airlines on  airlines.id = aha.airlines_id
+inner join flights on flights.airplanes_id = airplanes.id
+inner join routes on flights.routes_id = routes.id
+inner join airports on (routes.source_id = airports.id or routes.destination_id = airports.id)
+where airlines.name = "Olympic Airways" and routes.source_id = (select id from airports where city = "Athens" limit 1) and routes.destination_id = (select id from airports where city = "London" limit 1)
+and flights.date between "2011-02-01" and "2014-07-17"
+group by airplanes.id
+order by count desc;
+
+Question 3:
+select passengers.name, 
+count(passengers.id) as Times from passengers
+inner join flights_has_passengers as fhp on fhp.passengers_id = passengers.id
+inner join flights on fhp.flights_id = flights.id
+inner join routes on flights.routes_id = routes.id
+inner join airports on airports.id = routes.source_id
+where airports.name = "Athens El. Venizelos" and flights.date between "2014-01-01" and "2015-01-01"
+group by passengers.id
+having count(passengers.id) > 4
+order by Times desc;
+
+Question 4:
+select name, surname from (select passengers.*, airlines.name as airline_name, count(*) as flights from passengers
+
+inner join flights_has_passengers as fhp on fhp.passengers_id = passengers.id
+
+inner join flights on fhp.flights_id = flights.id
+
+inner join routes on flights.routes_id = routes.id
+
+inner join airlines on airlines.id = routes.airlines_id
+
+group by passengers.id
+
+having airlines.name = "British Airways" and flights = 1) as child;
+
+Question 5:
+select "Yes" as Answer from (select count(*) as count from (select count(airlines.name) as flights from routes
+
+inner join airlines on airlines.id = routes.airlines_id
+
+inner join airports on airports.id = routes.source_id or airports.id = routes.destination_id
+
+where airports.name = "London Gatwick"
+
+group by airlines.name) as child) as child2 where child2.count > 5
+
+union
+
+select "No" as Answer from (select count(*) as count from (select count(airlines.name) as flights from routes
+
+inner join airlines on airlines.id = routes.airlines_id
+
+inner join airports on airports.id = routes.source_id or airports.id = routes.destination_id
+
+where airports.name = "London Gatwick"
+
+group by airlines.name) as child) as child2 where child2.count <= 5;
+
+Question 6:
+select airlines.code, airlines.name, count(distinct airplanes.id) as Planes, count(distinct routes.id) as Routes  from airlines
+
+inner join airlines_has_airplanes as aha on aha.airlines_id = airlines.id
+
+inner join airplanes on aha.airplanes_id = airplanes.id
+
+inner join routes on routes.airlines_id = airlines.id
+
+group by airlines.name
+
+having Planes >5 and Routes>5 ;
+
+Question 7:
+select airports.name , count(distinct flights_has_passengers.passengers_id) as visitors  from airlines
+
+inner join routes on routes.airlines_id = airlines.id
+
+inner join airports on routes.source_id = airports.id or routes.destination_id = airports.id
+
+inner join flights on flights.routes_id = routes.id
+
+inner join flights_has_passengers on flights_has_passengers.flights_id = flights.id
+
+where airlines.name = "Aegean Airlines" and flights.date between "2011-01-01" and "2015-01-01"
+
+group by airports.name;
+
+Question 8:
+select count(*) as count from (select passengers.id , count(passengers.id) as times from  airports
+
+	inner join routes on routes.source_id = airports.id or routes.destination_id = airports.id
+
+	inner join flights on flights.routes_id = routes.id
+
+	inner join flights_has_passengers on flights_has_passengers.flights_id = flights.id
+
+	inner join passengers on flights_has_passengers.passengers_id = passengers.id
+
+	where airports.city = "Athens" and flights.date between "2010-01-01" and "2015-01-01"
+
+	group by passengers.id
+
+	having times>5) as child;
+
+Question 9:
+select airports.name , count(distinct airlines.name) as routes from airports
+
+inner join routes on routes.destination_id = airports.id or routes.source_id = airports.id
+
+inner join airlines on routes.airlines_id = airlines.id
+
+where airlines.active = "Y"
+
+group by airports.name
+
+order by routes desc, airports.name desc limit 1;
+
+Question 10:
+select name from (select airlines.name, count(distinct passengers.id) as count from airlines
+
+inner join routes on routes.airlines_id = airlines.id
+
+inner join flights on flights.routes_id = routes.id
+
+inner join flights_has_passengers on flights_has_passengers.flights_id = flights.id
+
+inner join passengers on flights_has_passengers.passengers_id = passengers.id
+
+where 2019 - passengers.year_of_birth <25
+
+group by airlines.name
+
+order by count desc limit 1) as child;
+
+Question 11:
+select airlines.name , count(distinct flights.id ) as Count from airlines
+
+inner join airlines_has_airplanes on airlines_has_airplanes.airlines_id = airlines.id
+
+inner join airplanes on airlines_has_airplanes.airplanes_id = airplanes.id
+
+inner join flights on flights.airplanes_id = airplanes.id
+
+where airplanes.manufacturer = "Boeing"
+
+group by airlines.name
+
+order by airlines.name;
+
+Question 12:
+select airlines.name , count(passengers.id) as count from airlines
+
+inner join routes on routes.airlines_id = airlines.id
+
+inner join airports on routes.source_id = airports.id or routes.destination_id = airports.id
+
+inner join flights on flights.routes_id = routes.id
+
+inner join flights_has_passengers on flights_has_passengers.flights_id = flights.id
+
+inner join passengers on flights_has_passengers.passengers_id = passengers.id
+
+where airports.city = "London"
+
+group by airlines.name
+
+order by count limit 5;
